@@ -1,0 +1,41 @@
+{# templates/login/index.html.twig #}
+{% extends "main-layout.html.twig" %}
+
+
+
+
+{% block body %}
+   
+ <div class="pt-6" style="paddding:10px;">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-md-9 col-lg-6 col-xl-5">
+        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+          class="img-fluid" alt="Sample image">
+      </div>
+      <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+    <form action="{{ path('app_login') }}" method="post">
+     {% if error %}
+        <div class="btn  btn-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+   <div class="mb-3"/>
+        <label for="username" class="form-label">Email:</label>
+        <input class="form-control" type="text" id="username" name="_username" value="{{ last_username }}"/>
+    </div>
+   <div class="mb-3"/>
+        <label class="form-label"  for="password">Password:</label>
+        <input class="form-control" type="password" id="password" name="_password"/>
+    </div>
+        {# If you want to control the URL the user is redirected to on success
+        <input type="hidden" name="_target_path" value="/news/1"/> #}
+         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+       <div class="mb-3"/>
+        <button class="btn btn-primary btn-lg" type="submit">login</button>
+        </div>
+    </form>
+
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

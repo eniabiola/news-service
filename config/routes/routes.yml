@@ -1,0 +1,8 @@
+index:
+  path: /
+  controller: App\Controller\LoginController::index
+
+news:
+  resource:  App\Controller\LoginController
+  prefix: /news
+  type: annotation

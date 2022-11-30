@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-container
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/project
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+  web_service:
+    build:
+      context: .
+      dockerfile: ./php/Dockerfile
+    ports:
+      - "8005:8000"
+    depends_on:
+      - rabbitmq
+      - mysql8
+      - nginx
+    volumes:
+      - ".:/var/www/project"
+      - "./php/supervisor:/etc/supervisor/conf.d"
+
+  # mysql
+  mysql8:
+    image: mysql:8
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./mysql_init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always # always restart unless stopped manually
+    environment:
+      MYSQL_DATABASE: appcakenews
+      MYSQL_ROOT_PASSWORD: App_Cake_Secret2022!
+      MYSQL_PASSWORD: App_Cake_Secret2022!
+      MYSQL_USER: appcake
+
+
+
+  #rabbitmq
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports: [5672, 15672]

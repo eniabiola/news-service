@@ -1,0 +1,61 @@
+FROM php:7.4-fpm
+
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends vim curl debconf subversion git apt-transport-https apt-utils \
+    build-essential locales acl mailutils wget zip unzip \
+    gnupg gnupg1 gnupg2 zlib1g-dev \
+    librabbitmq-dev \
+    libssh-dev \
+    && pecl install amqp \
+    && docker-php-ext-enable amqp && docker-php-ext-install mysqli pdo_mysql
+
+RUN apt-get update && apt-get install -y zlib1g-dev 
+COPY ./php/php.ini /etc/php/7.4/php.ini
+COPY ./php/php-fpm-pool.conf /etc/php/7.4/pool.d/www.conf
+
+RUN curl -sSk https://getcomposer.org/installer | php -- --disable-tls && \
+   mv composer.phar /usr/local/bin/composer
+
+RUN groupadd dev -g 999
+RUN useradd dev -g dev -d /home/dev -m
+
+RUN rm -rf /var/lib/apt/lists/*
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen
+
+USER root
+
+# Install Supervisor.
+RUN \
+  apt-get update && \
+  apt-get install -y supervisor && \
+  rm -rf /var/lib/apt/lists/*
+
+# Define mountable directories.
+VOLUME ["/etc/supervisor/conf.d"]
+
+# ------------------------------------------------------------------------------
+# Security changes
+# - Determine runlevel and services at startup [BOOT-5180]
+RUN update-rc.d supervisor defaults
+
+# - Check the output of apt-cache policy manually to determine why output is empty [KRNL-5788]
+RUN apt-get update | apt-get upgrade -y
+
+# - Install a PAM module for password strength testing like pam_cracklib or pam_passwdqc [AUTH-9262]
+RUN apt-get install libpam-cracklib -y
+RUN ln -s /lib/x86_64-linux-gnu/security/pam_cracklib.so /lib/security
+
+
+ADD init.sh /usr/src/app/init.sh
+RUN chmod +x /usr/src/app/init.sh
+
+WORKDIR /var/www/project
+
+
+ 
+
+EXPOSE 8000
+ENTRYPOINT ["/bin/bash","/usr/src/app/init.sh"]
